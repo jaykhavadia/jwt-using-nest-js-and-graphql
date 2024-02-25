@@ -16,48 +16,57 @@ export class AuthService {
   }
 
   async register(registerAuthInput: RegisterAuthInput) {
-    console.log('registerAuthInput ', registerAuthInput);
-    const saltOrRounds = 10;
-    const hash = await bcrypt.hash(registerAuthInput.password, saltOrRounds);
-    console.log('hash created', hash);
-    registerAuthInput.password = hash;
-    this.userRepository.save(registerAuthInput);
-    return registerAuthInput;
+    try {
+      const saltOrRounds = 10;
+      const hash = await bcrypt.hash(registerAuthInput.password, saltOrRounds);
+      registerAuthInput.password = hash;
+      this.userRepository.save(registerAuthInput);
+      return registerAuthInput;
+    } catch (error) {
+      console.error('error in register', error.message);
+      throw new BadRequestException(error.message);
+    }
   }
 
   async findOne(loginDetails: LoginAuthInput) {
-    console.log('i got this', loginDetails);
-    const email = loginDetails.email;
-    const user = await this.userRepository.findOne({ where: { email } }).then(async (user) => {
+    try {
+      const email = loginDetails.email;
+      const user = await this.userRepository.findOne({ where: { email } }).then(async (user) => {
 
-      if (!user) {
-        throw new BadRequestException('user not found');
-      }
+        if (!user) {
+          throw new BadRequestException('user not found');
+        }
 
-      if (!await bcrypt.compare(loginDetails?.password, user?.password)) {
-        throw new BadRequestException('Invalid credentials');
-      }
-      console.log('user', user);
+        if (!await bcrypt.compare(loginDetails?.password, user?.password)) {
+          throw new BadRequestException('Invalid credentials');
+        }
 
-      const accessToken = await this.jwtService.signAsync({ id: user.id });
-      console.log('JWt token generated', accessToken);
+        const accessToken = await this.jwtService.signAsync({ id: user.id });
 
-      return { accessToken };
-    });
+        return { accessToken };
+      });
 
-
-    return user;
+      return user;
+    } catch (error) {
+      console.error('error in findOne', error.message);
+      throw new BadRequestException(error.message);
+    }
   }
 
   async findOneByAccessToken(accessToken: string) {
-    const data = await this.jwtService.verifyAsync(accessToken);
-    const id = data.id;
-    const user = await this.userRepository.findOne({ where: { id } }).then(async (user: Auth) => {
-      console.log('user', user);
-      const {password, ...userData} = user;
-      return userData;
-    });
+    try {
 
-    return user;
+      const data = await this.jwtService.verifyAsync(accessToken);
+      const id = data.id;
+      const user = await this.userRepository.findOne({ where: { id } }).then(async (user: Auth) => {
+        const { password, ...userData } = user;
+        return userData;
+      });
+
+      return user;
+    } catch (error) {
+      console.error('error in findOneByAccessToken', error.message);
+      throw new BadRequestException(error.message);
+    }
   }
 }
