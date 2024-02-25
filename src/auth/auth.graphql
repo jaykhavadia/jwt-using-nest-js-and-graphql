@@ -1,0 +1,35 @@
+type RegisterAuthOutput {
+  name: String
+  email: String
+  password: String
+}
+
+type LoginAuthOutput {
+  accessToken: String
+}
+
+type GetUserOutput {
+  id: Int
+  name: String
+  email: String
+}
+
+input RegisterAuthInput {
+  name: String
+  email: String
+  password: String
+}
+
+input LoginAuthInput {
+  email: String
+  password: String
+}
+
+type Query {
+  user: GetUserOutput 
+}
+
+type Mutation {
+  register(registerAuthInput: RegisterAuthInput!): RegisterAuthOutput!
+  login(loginAuthInput: LoginAuthInput!): LoginAuthOutput!
+}
